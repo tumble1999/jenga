@@ -2,7 +2,7 @@
 // @name         Jenga
 // @description  Modding api for CritterClimb (based of cardboard by SArpnt)
 // @author       Tumble
-// @version      0.1.0.1
+// @version      0.1.1.2
 // @namespace    https://boxcrittersmods.ga/authors/tumble/
 // @homepage     https://boxcrittersmods.ga/projects/jenga/
 // @updateURL    https://github.com/tumble1999/jenga/raw/master/script.user.js
@@ -35,7 +35,7 @@
 		if (eval("typeof " + dep.obj) == "undefined") return dep.text;
 	}).filter(d => !!d).join("\n");
 
-	const VERSION = [0, 1, 0, 1];
+	const VERSION = [0, 1, 1, 2];
 	const IS_USERSCRIPT = GM_info.script.name == 'Jenga';
 
 	if (uWindow.jenga) {
@@ -314,11 +314,34 @@ Contact the mod developer.`);
 		docEventListen(name, action);
 	};
 
+
 	jenga.on("gameCreated", game => {
 		uWindow.game = game;
 	});
 
-	let proto;
+	let proto, jengaVersionText;
+
+
+	function initModVersionText(booter) {
+		if (!jengaVersionText) {
+			jengaVersionText = CritterClimb.Text.create({
+				text: "Jenga " + jenga.version.join("."),
+				font: "bold 17px Arial",
+				color: "#ffffff",
+				textAlign: "center",
+				outline: {
+					size: 1,
+					color: "#000000"
+				}
+			});
+			jengaVersionText.x = booter.stage.canvas.width / 2;
+			jengaVersionText.y = 15;
+		}
+
+	}
+
+
+
 	jenga.on("runScriptGame", function () {
 
 		proto = Object.keys(CritterClimb).reduce((obj, key) => {
@@ -334,15 +357,24 @@ Contact the mod developer.`);
 	});
 
 	jenga.on("booterCreated", booter => {
-		proto.TitleScreen.init = joinFunction(proto.TitleScreen.init, function () {
+		proto.TitleScreen.show = joinFunction(proto.TitleScreen.show, function () {
 			jenga.emit("titleScreenShown", booter, this);
 		});
-		proto.GameEngine.init = joinFunction(proto.GameEngine.init, function () {
+		proto.GameEngine.show = joinFunction(proto.GameEngine.show, function () {
 			jenga.emit("gameScreenShown", booter, this);
 		});
-		proto.LeaderboardScreen.init = joinFunction(proto.LeaderboardScreen.init, function () {
+		proto.LeaderboardScreen.show = joinFunction(proto.LeaderboardScreen.show, function () {
 			jenga.emit("leaderboardScreenShown", booter, this);
 		});
+	});
+
+	jenga.on("titleScreenShown", (booter, titleScreen) => {
+		initModVersionText(booter);
+		titleScreen.titleScreenContainer.addChild(jengaVersionText);
+	});
+	jenga.on("gameScreenShown", (booter, gameScreen) => {
+		initModVersionText(booter);
+		gameScreen.gameScreenContainer.addChild(jengaVersionText);
 	});
 
 	uWindow.jenga = jenga;
