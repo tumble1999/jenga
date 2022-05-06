@@ -19,10 +19,21 @@
 (function () {
 	'use strict';
 
-	if (typeof joinFunction == 'undefined') throw `@require https://cdn.jsdelivr.net/gh/SArpnt/joinFunction/script.min.js`;
-	if (typeof EventHandler == 'undefined') throw `@require https://cdn.jsdelivr.net/gh/SArpnt/EventHandler/script.min.js`;
-
 	const uWindow = typeof unsafeWindow != 'undefined' ? unsafeWindow : window;
+
+	let deps = [
+		{
+			obj: "joinFunction",
+			text: "// @require      https://github.com/SArpnt/joinFunction/raw/master/script.js"
+		},
+		{
+			obj: "EventHandler",
+			text: "// @require      https://github.com/SArpnt/EventHandler/raw/master/script.js"
+		},
+	];
+	if (deps.map(dep => eval("typeof " + dep.obj)).includes("undefined")) throw "\nATTENTION MOD DEVELOPER:\nPlease add the following to your code:\n" + deps.map(dep => {
+		if (eval("typeof " + dep.obj) == "undefined") return dep.text;
+	}).filter(d => !!d).join("\n");
 
 	const VERSION = [0, 1, 0, 1];
 	const IS_USERSCRIPT = GM_info.script.name == 'Jenga';
