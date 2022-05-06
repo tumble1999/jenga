@@ -1,17 +1,17 @@
 // ==UserScript==
-// @name         Cardboard
-// @description  Modding api
-// @author       SArpnt
-// @version      5.6.3
-// @namespace    https://boxcrittersmods.ga/authors/sarpnt/
-// @homepage     https://boxcrittersmods.ga/projects/cardboard/
-// @updateURL    https://github.com/SArpnt/cardboard/raw/master/script.user.js
-// @downloadURL  https://github.com/SArpnt/cardboard/raw/master/script.user.js
-// @supportURL   https://github.com/SArpnt/cardboard/issues
-// @icon         https://github.com/SArpnt/cardboard/raw/master/icon16.png
-// @icon64       https://github.com/SArpnt/cardboard/raw/master/icon64.png
+// @name         Jenga
+// @description  Modding api for CritterClimb (based of cardboard by SArpnt)
+// @author       Tumble
+// @version      0.1.0.1
+// @namespace    https://boxcrittersmods.ga/authors/tumble/
+// @homepage     https://boxcrittersmods.ga/projects/jenga/
+// @updateURL    https://github.com/tumble1999/jenga/raw/master/script.user.js
+// @downloadURL  https://github.com/tumble1999/jenga/raw/master/script.user.js
+// @supportURL   https://github.com/tumble1999/jenga/issues
+// @icon         https://github.com/tumble1999/jenga/raw/master/icon16.png
+// @icon64       https://github.com/tumble1999/jenga/raw/master/icon64.png
 // @run-at       document-start
-// @include      /^https:\/\/boxcritters\.com\/play\/(index\.html)?([\?#].*)?$/
+// @include      /^https:\/\/boxcritters\.com\/games\/critterclimb\/(v2\/)?(index\.html)?([\?#].*)?$/
 // @require      https://github.com/SArpnt/joinFunction/raw/master/script.js
 // @require      https://github.com/SArpnt/EventHandler/raw/master/script.js
 // ==/UserScript==
@@ -24,47 +24,52 @@
 
 	const uWindow = typeof unsafeWindow != 'undefined' ? unsafeWindow : window;
 
-	const VERSION = [5, 6, 3];
-	const IS_USERSCRIPT = GM_info.script.name == 'Cardboard';
+	const VERSION = [0, 1, 0, 1];
+	const IS_USERSCRIPT = GM_info.script.name == 'Jenga';
 
-	if (uWindow.cardboard) {
+	if (uWindow.jenga) {
 		// register
-		if (uWindow.cardboard.awaitingReg)
-			uWindow.cardboard.unregistered.push(uWindow.cardboard.awaitingReg.script.name);
-		else if (uWindow.cardboard.awaitingReg === undefined)
+		if (uWindow.jenga.awaitingReg)
+			uWindow.jenga.unregistered.push(uWindow.jenga.awaitingReg.script.name);
+		else if (uWindow.jenga.awaitingReg === undefined)
 			alert(`The mod '${GM_info.script.name}' loaded late!
 Contact the mod developer.`);
 
 		if (IS_USERSCRIPT)
-			uWindow.cardboard.awaitingReg = null;
+			uWindow.jenga.awaitingReg = null;
 		else
-			uWindow.cardboard.awaitingReg = GM_info;
+			uWindow.jenga.awaitingReg = GM_info;
 
 		// version detection
 		let comp = (a, b) => (a < b) - (b < a);
-		switch (comp(uWindow.cardboard.version, VERSION)) {
+		switch (comp(uWindow.jenga.version, VERSION)) {
 			case 1: // this is newer
-				if (uWindow.cardboard.mods) {
-					let m = Object.keys(uWindow.cardboard.mods);
-					alert(`The mod${m.length == 1 ? '' : 's'} ${m.map(a => `'${a}'`).join(',')} ${m.length == 1 ? 'is' : 'are'} using an older version of cardboard.
+				if (uWindow.jenga.mods) {
+					let m = Object.keys(uWindow.jenga.mods);
+					alert(`The mod${m.length == 1 ? '' : 's'} ${m.map(a => `'${a}'`).join(',')} ${m.length == 1 ? 'is' : 'are'} using an older version of jenga.
 Try reinstalling ${m.length == 1 ? 'this mod' : 'these mods'}.`);
 				} else
-					alert(`Unknown mods are using an older version of cardboard.
+					alert(`Unknown mods are using an older version of jenga.
 Try reinstalling all active mods.`);
 				break;
 			case -1: // this is older
 				if (IS_USERSCRIPT)
-					alert(`The mod 'Cardboard' (the userscript) is out of date.
+					alert(`The mod 'Jenga' (the userscript) is out of date.
 Update this mod.`);
 				else
-					alert(`The mod '${GM_info.script.name}' using an older version of cardboard.
+					alert(`The mod '${GM_info.script.name}' using an older version of jenga.
 Try reinstalling this mod.`);
 				break;
 		}
 		return;
 	}
+	/*
+	Game engine - b
+	leaderboard - d
+	titleScreen - h
+	*/
 
-	let cardboard = new EventHandler([
+	let jenga = new EventHandler([
 		'modRegistered',
 		'requiredModRegistered',
 		'unrequiredModRegistered',
@@ -75,21 +80,20 @@ Try reinstalling this mod.`);
 		'loadScript',
 		'runScript',
 
-		'worldCreated',
-		'worldSocketCreated',
-		'worldStageCreated',
-		'worldManifestCreated',
-		'clientCreated',
-		'joinRoom',
-		'login',
+		'gameCreated',
+		'booterCreated',
+		'assetsLoaded',
+		'titleScreenShown',
+		'gameScreenShown',
+		'leaderboardShown'
 	], false);
-	cardboard.version = VERSION;
+	jenga.version = VERSION;
 
 	// register system
-	cardboard.mods = {};
-	cardboard.awaitingReg = GM_info;
-	cardboard.unregistered = [];
-	cardboard.register = function (mod, data = {}, req = true, gmInfo) {
+	jenga.mods = {};
+	jenga.awaitingReg = GM_info;
+	jenga.unregistered = [];
+	jenga.register = function (mod, data = {}, req = true, gmInfo) {
 		if (typeof mod != 'string' || !mod) throw new TypeError(`Parameter 1 must be of type 'string'`);
 		if (!/^[a-z_$][\w$]*$/i.test(mod)) throw new TypeError(`Invalid characters in modname (must be valid for dot notation)`);
 		if (typeof data != 'object' || data === null) throw new TypeError(`Parameter 2 must be of type 'object'`);
@@ -97,52 +101,52 @@ Try reinstalling this mod.`);
 			typeof gmInfo != 'object' || gmInfo === null ||
 			!gmInfo.script || !gmInfo.script.name)) throw new TypeError(`Parameter 4 must be of type GM_info`);
 
-		if (req && !cardboard.awaitingReg) {
-			if (cardboard.mods[mod]) {
-				alert(`The mod '${(cardboard.mods[mod].GM_info && cardboard.mods[mod].GM_info) || mod}' registered twice!
+		if (req && !jenga.awaitingReg) {
+			if (jenga.mods[mod]) {
+				alert(`The mod '${(jenga.mods[mod].GM_info && jenga.mods[mod].GM_info) || mod}' registered twice!
 Contact the mod creator.`);
 				return;
 			} else {
-				alert(`The mod '${mod}' registered without cardboard detecting it beforehand!
+				alert(`The mod '${mod}' registered without jenga detecting it beforehand!
 Contact the mod creator.`);
 			}
 		}
-		if (cardboard.mods[mod]) {
-			alert(`The mod '${(cardboard.awaitingReg && cardboard.awaitingReg.script.name) ||
+		if (jenga.mods[mod]) {
+			alert(`The mod '${(jenga.awaitingReg && jenga.awaitingReg.script.name) ||
 				(gmInfo && gmInfo.script.name) ||
 				mod}' is conflicting with '${mod}'!
 Either don't use these mods together or contact the mod creator.`);
 			return;
 		}
 		if (req) { // assign gm_info
-			data.GM_info = cardboard.awaitingReg;
-			cardboard.awaitingReg = null;
+			data.GM_info = jenga.awaitingReg;
+			jenga.awaitingReg = null;
 		} else {
 			data.GM_info = gmInfo;
 			if (!gmInfo)
 				console.warn(`No GM_info for mod '${mod}'!`);
 		}
 
-		cardboard.mods[mod] = data;
-		cardboard.emit('modRegistered', mod, data, cardboard.mods);
-		cardboard.emit(req ? 'requiredModRegistered' : 'unrequiredModRegistered', mod, data, cardboard.mods);
+		jenga.mods[mod] = data;
+		jenga.emit('modRegistered', mod, data, jenga.mods);
+		jenga.emit(req ? 'requiredModRegistered' : 'unrequiredModRegistered', mod, data, jenga.mods);
 		return data;
 	};
 	setTimeout(function () {
-		if (cardboard.awaitingReg)
-			cardboard.unregistered.push(cardboard.awaitingReg.script.name);
-		delete cardboard.awaitingReg;
+		if (jenga.awaitingReg)
+			jenga.unregistered.push(jenga.awaitingReg.script.name);
+		delete jenga.awaitingReg;
 
-		if (cardboard.unregistered.length)
-			alert(`The mod${cardboard.unregistered.length == 1 ? '' : 's'} ${cardboard.unregistered.map(a => `'${a}'`).join(',')} didn't register!
-Try reinstalling the${cardboard.unregistered.length == 1 ? 'is mod' : 'ese mods'}.`);
-		cardboard.register = function (mod) {
+		if (jenga.unregistered.length)
+			alert(`The mod${jenga.unregistered.length == 1 ? '' : 's'} ${jenga.unregistered.map(a => `'${a}'`).join(',')} didn't register!
+Try reinstalling the${jenga.unregistered.length == 1 ? 'is mod' : 'ese mods'}.`);
+		jenga.register = function (mod) {
 			alert(`The mod '${mod}' registered late!
 Contact the mod developer.`);
 		};
-		cardboard.emit('allModsRegistered', cardboard.mods);
+		jenga.emit('allModsRegistered', jenga.mods);
 	}, 0);
-	cardboard.register('cardboard', cardboard, IS_USERSCRIPT);
+	jenga.register('jenga', jenga, IS_USERSCRIPT);
 
 	let ajax = function (url, callback, stopCache = false) {
 		if (stopCache)
@@ -172,27 +176,14 @@ Contact the mod developer.`);
 				return document.querySelector(`script[src="${s.src}"]`);
 		};
 		let scriptTags = [
-			{ name: "Bootstrap", selector: /vendor\/js\/bootstrap(\.min)?\.js$/, src: '../vendor/js/bootstrap.min.js', ranTest: _ => uWindow.bootstrap, state: 0, }, // state 0 unloaded, 1 loaded, 2 ran
-			{ name: "Createjs", selector: /vendor\/js\/createjs(\.min)?\.js$/, src: '../vendor/js/createjs.min.js', ranTest: _ => uWindow.createjs, state: 0, },
-			{ name: "SocketIo", selector: /vendor\/js\/socket\.io(\.min)?\.js$/, src: '../vendor/js/socket.io.js', ranTest: _ => uWindow.io, state: 0, },
-
-			{ name: "World", nicknames: ["Client"], selector: /(lib\/)?world(-?\d+)?(\.min)?\.js$/, src: true, ranTest: _ => uWindow.client, state: 0, },
-			{ name: "Boot", selector: /(lib\/)?boot(-?\d+)?(\.min)?\.js$/, src: '../lib/boot.min.js', ranTest: _ => uWindow.boot, state: 0, },
-
-			//{ name: "Login", selector: /(lib\/)?login(-?\d+)?(\.min)?\.js$/, src: 'login.js', state: 0, },
-			//{ name: "Hero", selector: /(lib\/)?hero(-?\d+)?(\.min)?\.js$/, src: 'hero.js', ranTest: _ => uWindow.addHero, state: 0, },
-			{ name: "Shop", selector: /(lib\/)?shop(-?\d+)?(\.min)?\.js$/, src: 'shop.js', ranTest: _ => uWindow.extra, state: 0, },
-			{ name: "Play", nicknames: ["Ux"], selector: /play(-?\d+)?(\.min)?\.js$/, src: true, ranTest: _ => uWindow.ux, state: 0, },
-
-			{ name: "Init", nicknames: ["Index"], selector: /^\s*function\s*init\s*\(\s*\)/, src: false, ranTest: _ => uWindow.init, state: 0, },
-			//{ name: "ShowGame", selector: /showGame/, state: 0, },
-			//{ name: "Modal", selector: /var\smodalElement/, state: 0, },
-			{ name: "Mobile", selector: /function\s+mobile/, ranTest: _ => uWindow.mobile, state: 0, },
+			{ name: "Seedrandom", selector: /vendor\/seedrandom(\.min)?\.js$/, src: 'vendor/seedrandom.js', ranTest: _ => uWindow.Math.seedrandom, state: 0, }, // state 0 unloaded, 1 loaded, 2 ran
+			{ name: "Createjs", selector: /vendor\/createjs(\.min)?\.js$/, src: 'vendor/createjs.min.js', ranTest: _ => uWindow.createjs, state: 0, },
+			{ name: "Critterclimb", nicknames: ["Game"], selector: /critterclimb(\.min)?\.js$/, src: 'critterclimb.min.js', ranTest: _ => uWindow.CritterClimb, state: 0, },
 		];
 		if (document.scripts)
 			for (let s of scriptTags)
 				if (getScript(s) && (!s.ranTest || s.ranTest())) {
-					alert(`Cardboard wasn't injected in time!
+					alert(`Jenga wasn't injected in time!
 					1) Try refreshing to see if this fixes the issue
 					2) Enable instant script injection in tampermonkey settings:
 						- Click tampermonkey's icon, a menu should appear
@@ -235,12 +226,12 @@ Contact the mod developer.`);
 
 		let finish = function (s) {
 			s.tag.innerHTML = s.text;
-			cardboard.emit(`loadScript${s.name}`, s.tag);
-			cardboard.emit(`loadScript`, s.name, s.tag);
+			jenga.emit(`loadScript${s.name}`, s.tag);
+			jenga.emit(`loadScript`, s.name, s.tag);
 			if (s.nicknames)
 				for (let n of s.nicknames) {
-					cardboard.emit(`loadScript${n}`, s.tag);
-					cardboard.emit(`loadScript`, n, s.tag);
+					jenga.emit(`loadScript${n}`, s.tag);
+					jenga.emit(`loadScript`, n, s.tag);
 				}
 
 			s.state = 2;
@@ -250,20 +241,20 @@ Contact the mod developer.`);
 		};
 		function runScripts() {
 			MO.disconnect();
-			cardboard.emit('loadScripts');
+			jenga.emit('loadScripts');
 			for (let s of scriptTags)
 				if (s.state == 2) {
 					document.documentElement.appendChild(s.tag);
 					s.state = 3;
-					cardboard.emit(`runScript${s.name}`, s.tag);
-					cardboard.emit(`runScript`, s.name, s.tag);
+					jenga.emit(`runScript${s.name}`, s.tag);
+					jenga.emit(`runScript`, s.name, s.tag);
 					if (s.nicknames)
 						for (let n of s.nicknames) {
-							cardboard.emit(`runScript${n}`, s.tag);
-							cardboard.emit(`runScript`, n, s.tag);
+							jenga.emit(`runScript${n}`, s.tag);
+							jenga.emit(`runScript`, n, s.tag);
 						}
 				}
-			cardboard.emit('runScripts');
+			jenga.emit('runScripts');
 		}
 
 		let pageLoadDebugger = function () {
@@ -271,14 +262,14 @@ Contact the mod developer.`);
 			for (let t of scriptTags)
 				switch (t.state) {
 					case 0:
-						console.error(`Cardboard: Script event issues! Couldn't find`, t);
+						console.error(`Jenga: Script event issues! Couldn't find`, t);
 						run = true;
 						break;
 					case 1:
-						console.warn(`Cardboard: Script not ran in time! (Not all script srcs finished loading) May have compatibility issues`, t);
+						console.warn(`Jenga: Script not ran in time! (Not all script srcs finished loading) May have compatibility issues`, t);
 						break;
 					//case 2:
-					//	console.error(`Cardboard: Script src found but not ran? Needs to be fixed`, t);
+					//	console.error(`Jenga: Script src found but not ran? Needs to be fixed`, t);
 					//	run = true;
 				}
 			if (run) runScripts();
@@ -286,65 +277,93 @@ Contact the mod developer.`);
 		uWindow.addEventListener('load', _ => setTimeout(pageLoadDebugger, 0));
 	}
 
-	{ // getPlayerCrumb
-		let crumb = v => function (t, d, w) {
-			if (typeof w == 'undefined')
-				if (world)
-					w = world;
-				else
-					throw `'world' not found, specify a world`;
-			let func;
-			if (typeof t == 'function') func = t;
-			else func = e => e[t] == d;
-			return w.room.playerCrumbs[v](func);
-		};
-		cardboard.getPlayerCrumb = crumb("find");
-		cardboard.getPlayerCrumbs = crumb("filter");
-		cardboard.getPlayerSprite = (...a) => world.stage.room.players[cardboard.getPlayerCrumb(...a).i];
-		cardboard.getPlayerSprites = (...a) => cardboard.getPlayerCrumbs(...a).map(e => world.stage.room.players[e.i]);
-	}
 
-	/*
-	cardboard.createButton = function (text, pos, style = "") {
-		let b = document.createElement('button'); // acutally maybe copy element
-		b.innerText = text;
-		b.style = style;
-		return b;
-	}
-	*/
-	/**
-	 * locations:
-	 * 	aboveChat "#chat .above-chat" (make div for it in "#chat .chat-form")
-	 * 	chat "#chat .input-group-btn"
-	 * 	belowChat "#chat .abelow-chat" (like aboveChat)
-	 * 	// (likely not possible yet) footer (sign out button location)
-	 */
+	let docEventListen = document.addEventListener;
+	document.addEventListener = function (name, action) {
+		if (name == "DOMContentLoaded") {
+			action = function () {
+				var t, e = new CritterClimb;
+				jenga.emit("gameCreated", e);
+				e.init({
+					language: "en",
+					path: "./assets/",
+					quality: "high",
+					debug: !1,
+					canvas: {
+						parentDivId: "boxcritters",
+						canvasId: "cc_canvas"
+					}
+				}),
+					e.bootGame(),
+					(t = e.getCanvas()).style.marginLeft = "auto",
+					t.style.marginRight = "auto",
+					t.style.display = "block";
+			};
+		}
+		docEventListen(name, action);
+	};
 
-	cardboard.on('runScriptClient', function () {
-		client.World = joinFunction(client.World, function () {
-			cardboard.emit('worldCreated', this);
-			cardboard.emit('worldStageCreated', this, this.stage); // depricated unless a new update uses it
-		});
-		let p = client.World.prototype;
-		p.connect = joinFunction(p.connect, function () {
-			cardboard.emit('worldSocketCreated', this, this.socket);
-		});
-		cardboard.emit('clientCreated', client);
+	jenga.on("gameCreated", game => {
+		uWindow.game = game;
 	});
 
-	cardboard.on('worldCreated', function (w) {
-		w.on('login', p =>
-			cardboard.emit('login', w, p)
-		);
-		w.on('joinRoom', t =>
-			cardboard.emit('joinRoom', w, t)
-		);
+	let proto;
+	jenga.on("runScriptGame", function () {
+
+		proto = Object.keys(CritterClimb).reduce((obj, key) => {
+			obj[key] = CritterClimb[key].prototype;
+			return obj;
+		}, {});
+		proto.Booter.createCanvas = joinFunction(proto.Booter.createCanvas, function () {
+			jenga.emit("booterCreated", this);
+		});
+		proto.Booter.handleLoadComplete = joinFunction(proto.Booter.handleLoadComplete, function () {
+			jenga.emit("assetsLoaded", this, this.loadedImages, this.loadedSpriteSheets, this.loadedSound);
+		});
 	});
 
-	/*cardboard.on('worldSocketCreated', function (w, s) {
+	jenga.on("booterCreated", booter => {
+		proto.TitleScreen.init = joinFunction(proto.TitleScreen.init, function () {
+			jenga.emit("titleScreenShown", booter, this);
+		});
+		proto.GameEngine.init = joinFunction(proto.GameEngine.init, function () {
+			jenga.emit("gameScreenShown", booter, this);
+		});
+		proto.LeaderboardScreen.init = joinFunction(proto.LeaderboardScreen.init, function () {
+			jenga.emit("leaderboardScreenShown", booter, this);
+		});
+	});
 
-	});*/
+	uWindow.jenga = jenga;
+	window.dispatchEvent(new Event('jengaLoaded'));
+})();
 
-	uWindow.cardboard = cardboard;
-	window.dispatchEvent(new Event('cardboardLoaded'));
+
+
+//test
+(function () {
+	'use strict';
+
+	jenga.on("loadScripts", _ => {
+		console.log("Scripts Loaded");
+	});
+	jenga.on("runScripts", _ => {
+		console.log("Scripts Ran");
+	});
+	jenga.on("gameCreated", game => {
+		console.log("Game Created", game);
+	});
+	jenga.on("booterCreated", booter => {
+		console.log("Booter Created: ", booter);
+	});
+
+	jenga.on("titleScreenShown", (booter, titleScreen) => {
+		console.log("Title Screen Shown: ", titleScreen);
+	});
+	jenga.on("gameScreenShown", (booter, gameScreen) => {
+		console.log("Game Screen Shown: ", gameScreen);
+	});
+	jenga.on("leaderboardShown", (booter, leaderboardScreen) => {
+		console.log("Leaderboard Shown: ", leaderboardScreen);
+	});
 })();
